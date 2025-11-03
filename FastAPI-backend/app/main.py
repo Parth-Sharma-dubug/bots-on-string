@@ -1,30 +1,50 @@
+# main.py
+import os
+import asyncio
+from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import router
-from app.db.session import engine
-from app.models import Base
+from app.core.database import Base, engine, SessionLocal
+from app.api.api_v1.routes import router as api_router
+from app.core.config import settings
+from app.services.visitor_service import cleanup_expired_sessions_task
+from app.db.session import engine, init_db
+from app.db.base import Base
+from app.api.api_v1.routes import router
 
-# Create database tables
+load_dotenv()
+
+app = FastAPI(title="Multi-Company Chatbot Backend")
+
+# Create DB tables (simple approach: create_all). For production use alembic.
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(
-    title="BOTS-ON-STRING API",
-    description="A multi-company chatbot training and management platform",
-    version="1.0.0",
-)
+app.include_router(api_router, prefix="/api/v1")
 
-# Allow CORS (frontend <-> backend communication)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # TODO: restrict to your frontend domain in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.on_event("startup")
+async def on_startup():
+    # launch cleanup background task
+    app.state.cleanup_task = asyncio.create_task(cleanup_expired_sessions_task())
 
-# Include all API routes
-app.include_router(router, prefix="/api")
+@app.on_event("startup")
+def on_startup():
+    init_db()
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    task = getattr(app.state, "cleanup_task", None)
+    if task:
+        task.cancel()
+@app.on_event("startup")
+def on_startup():
+    print("Creating database tables if they don't exist...")
+    Base.metadata.create_all(bind=engine)
+
+# Register routes
+from app.api.api_v1.routes import router as api_router
+app.include_router(api_router)
 
 @app.get("/")
-def read_root():
-    return {"message": "Welcome to BOTS-ON-STRING API 🚀"}
+def root():
+    return {"message": "Backend running successfully 🚀"}
+
+app.include_router(api_router)

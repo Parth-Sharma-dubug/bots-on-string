@@ -1,20 +1,21 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-class CompanyBase(BaseModel):
+class ChatbotBase(BaseModel):
     name: str
     description: Optional[str] = None
 
-class CompanyCreate(CompanyBase):
-    pass
+class ChatbotCreate(ChatbotBase):
+    company_id: int
 
-class CompanyUpdate(BaseModel):
+class ChatbotUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
 
-class CompanyOut(CompanyBase):
+class ChatbotOut(ChatbotBase):
     id: int
+    company_id: int
     created_at: datetime
 
     class Config:

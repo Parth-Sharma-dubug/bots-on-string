@@ -1,25 +1,19 @@
 from pydantic import BaseModel
-from typing import Optional, List
-from uuid import UUID
 from datetime import datetime
-
+from typing import Optional
 
 class ChatBase(BaseModel):
-    user_id: UUID
-    company_id: UUID
-    message: str
-
+    question: str
+    answer: Optional[str] = None
 
 class ChatCreate(ChatBase):
-    pass
+    visitor_id: int
+    chatbot_id: int
 
-
-class ChatResponse(BaseModel):
-    id: UUID
-    user_id: UUID
-    company_id: UUID
-    message: str
-    response: Optional[str]
+class ChatOut(ChatBase):
+    id: int
+    visitor_id: int
+    chatbot_id: int
     created_at: datetime
 
     class Config:

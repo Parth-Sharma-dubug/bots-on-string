@@ -1,29 +1,15 @@
-from pydantic_settings import BaseSettings
-from functools import lru_cache
+# app/core/config.py
+import os
+from dotenv import load_dotenv
 
-class Settings(BaseSettings):
-    # === Project Config ===
-    PROJECT_NAME: str = "BOTS-ON-STRING"
-    API_V1_PREFIX: str = "/api/v1"
-    DEBUG: bool = True
+load_dotenv()
 
-    # === Environment Variables ===
-    OPENAI_API_KEY: str
-    QDRANT_URL: str = "http://localhost:6333"
-    DATABASE_URL: str = "sqlite:///./bots_on_string.db"  # or PostgreSQL URL
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
+    QDRANT_URL: str = os.getenv("QDRANT_URL")
+    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
+    ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "admin")
+    SESSION_TTL_SECONDS: int = int(os.getenv("SESSION_TTL_SECONDS", "3600"))
 
-    # === JWT Config ===
-    SECRET_KEY: str = "your-secret-key"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-
-@lru_cache()
-def get_settings() -> Settings:
-    """Cache the settings instance to avoid reloading .env repeatedly."""
-    return Settings()
-settings = get_settings()
+settings = Settings()
