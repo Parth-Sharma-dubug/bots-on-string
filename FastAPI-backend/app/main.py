@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from app.core.database import Base, engine, SessionLocal
 from app.api.api_v1.routes import router as api_router
-from app.core.config import settings
+from app.core.config import get_settings
 from app.services.visitor_service import cleanup_expired_sessions_task
 from app.db.session import engine, init_db
 from app.db.base import Base
