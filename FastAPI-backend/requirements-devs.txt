@@ -1,0 +1,9 @@
+pytest
+pytest-asyncio
+factory-boy
+faker
+black
+isort
+flake8
+mypy
+pre-commit

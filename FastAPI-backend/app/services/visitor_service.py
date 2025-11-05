@@ -7,14 +7,14 @@ import asyncio
 from sqlalchemy.orm import Session
 from app.models.visitor import Visitor
 from app.models.chat import ChatMessage
-from app.core.config import settings
+from app.core.config import get_settings
 from app.utils.openai_client import generate_response
 from app.utils.qdrant_client import get_qdrant
 
 def create_visitor_session(db: Session, chatbot_id: int):
     session_id = str(uuid.uuid4())
     now = datetime.utcnow()
-    expires_at = now + timedelta(seconds=settings.SESSION_TTL_SECONDS)
+    expires_at = now + timedelta(seconds=get_settings.SESSION_TTL_SECONDS)
     vs = Visitor(session_id=session_id, chatbot_id=chatbot_id, created_at=now, expires_at=expires_at)
     db.add(vs)
     db.commit()

@@ -12,4 +12,4 @@ class Settings:
     ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "admin")
     SESSION_TTL_SECONDS: int = int(os.getenv("SESSION_TTL_SECONDS", "3600"))
 
-settings = Settings()
+get_settings = Settings()
