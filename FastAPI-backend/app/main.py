@@ -1,25 +1,50 @@
-from fastapi import FastAPI, Header, HTTPException, BackgroundTasks
-from pydantic import BaseModel
+# main.py
+import os
+import asyncio
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from app.core.database import Base, engine, SessionLocal
+from app.api.api_v1.routes import router as api_router
+from app.core.config import settings
+from app.services.visitor_service import cleanup_expired_sessions_task
+from app.db.session import engine, init_db
+from app.db.base import Base
+from app.api.api_v1.routes import router
 
-app = FastAPI()
+load_dotenv()
 
-class ChatRequest(BaseModel):
-    message: str
-    session_id: str | None = None
+app = FastAPI(title="T.R.I.B.E - TENANT RESOURCE INTELLIGENCE BOT ENSEMBLE")
 
-@app.post("/v1/chat")
-async def chat(req: ChatRequest, x_api_key: str = Header(...)):
-    # 1. validate API key -> get tenant_id, chatbot_id
-    tenant_id, chatbot_id = validate_api_key(x_api_key)
-    # 2. embed query
-    q_vec = embed_text(req.message)
-    # 3. vector search with filter tenant_id+chatbot_id
-    docs = vector_db.search(q_vec, filter={"tenant_id": tenant_id, "chatbot_id": chatbot_id}, top_k=5)
-    # 4. build prompt + include conversation memory (Redis)
-    prompt = build_prompt(docs, req.message, tenant_id, chatbot_id, req.session_id)
-    # 5. call Gemini LLM
-    resp = call_gemini(prompt)
-    # 6. store session memory, log usage
-    save_session_memory(req.session_id, req.message, resp)
-    log_usage(tenant_id, chatbot_id, x_api_key, req.message, resp)
-    return {"answer": resp, "sources": [d.metadata for d in docs]}
+# Create DB tables (simple approach: create_all). For production use alembic.
+Base.metadata.create_all(bind=engine)
+
+app.include_router(api_router, prefix="/api/v1")
+
+@app.on_event("startup")
+async def on_startup():
+    # launch cleanup background task
+    app.state.cleanup_task = asyncio.create_task(cleanup_expired_sessions_task())
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    task = getattr(app.state, "cleanup_task", None)
+    if task:
+        task.cancel()
+@app.on_event("startup")
+def on_startup():
+    print("Creating database tables if they don't exist...")
+    Base.metadata.create_all(bind=engine)
+
+# Register routes
+from app.api.api_v1.routes import router as api_router
+app.include_router(api_router)
+
+@app.get("/")
+def root():
+    return {"message": "Backend running successfully 🚀"}
+
+app.include_router(api_router)
