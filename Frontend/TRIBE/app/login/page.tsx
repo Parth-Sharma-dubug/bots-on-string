@@ -30,7 +30,9 @@ export default function Login() {
     }
 
     // Save company ID
-    localStorage.setItem("companyID", data.id);
+    localStorage.setItem("companyID", data.company.id);
+    // Save company token
+    localStorage.setItem("token", data.access_token);
 
     // Redirect to chatbots page
     router.push("/chatbot");

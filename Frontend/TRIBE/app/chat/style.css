@@ -117,3 +117,43 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Message Row Alignment */
+.message-row {
+  display: flex;
+  margin: 8px 0;
+}
+
+/* Left (Bot) */
+.message-bot {
+  justify-content: flex-start;
+}
+
+/* Right (User) */
+.message-user {
+  justify-content: flex-end;
+}
+
+/* Bubble Styling */
+.message-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* Bot bubble (left) */
+.bubble-bot {
+  background: #e5e7eb; /* light gray */
+  color: #111;
+  border-top-left-radius: 4px;
+}
+
+/* User bubble (right) */
+.bubble-user {
+  background: #2563eb; /* blue */
+  color: white;
+  border-top-right-radius: 4px;
+}
+

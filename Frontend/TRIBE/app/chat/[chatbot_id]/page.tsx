@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import fetchClient from "@/lib/apiClient";
 import MessageBubble from "@/components/MessageBubble";
 import Loader from "@/components/Loader";
@@ -20,6 +20,7 @@ interface ContextItem {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
   const params = useParams();
   const chatbotId = params.chatbot_id as string; // ← READ ROUTE PARAM HERE
 
@@ -32,6 +33,21 @@ export default function ChatPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // check token:
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/login");
+
+    // Optional: verify token with backend
+    fetch("http://localhost:8000/company/company/verify", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) router.push("/login");
+      })
+      .catch(() => router.push("/login"));
+  }, []);
 
   const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,12 +67,15 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
       const data = await fetchClient<{ reply: string }>(
         `/chat/chat/${chatbotId}/ollamaTesting`,
         {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           method: "POST",
           body: JSON.stringify({
-            chatbotId,
             message: currentQuery,
             context: chatContext,
           }),

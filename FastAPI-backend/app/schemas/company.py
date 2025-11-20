@@ -45,3 +45,10 @@ class CompanyRead(BaseModel):
     description: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    company: CompanyRead

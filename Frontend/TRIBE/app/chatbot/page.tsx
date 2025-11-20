@@ -21,24 +21,43 @@ export default function CreateChatbotPage() {
     router.push("/train");
   };
 
+  // check token:
+  // check token:
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/login");
+
+    // Optional: verify token with backend
+    fetch("http://localhost:8000/company/company/verify", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) router.push("/login");
+      })
+      .catch(() => router.push("/login"));
+  }, []);
+
   useEffect(() => {
     const fetchChatbots = async () => {
       try {
-        const companyId = localStorage.getItem("company_id");
+        const companyId = localStorage.getItem("companyID");
+        const token = localStorage.getItem("token");
         if (!companyId) {
           setLoading(false);
           return;
         }
 
-        const res = await fetch("http://localhost:8000/chatbot/chatbot");
-        const data = await res.json();
-
-        // Filter the chatbots by company_id
-        const filtered = data.filter(
-          (cb: any) => cb.company_id === parseInt(companyId)
+        const res = await fetch(
+          `http://localhost:8000/chatbot/chatbot/chatbots`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
-        setChatbots(filtered);
+        const data = await res.json();
+        setChatbots(data);
       } catch (error) {
         console.error("Failed to load chatbots:", error);
       } finally {
@@ -51,29 +70,31 @@ export default function CreateChatbotPage() {
 
   return (
     <div className="page-container">
-      <h1 className="page-title">Chatbot Setup 🤖</h1>
+      <h1 className="page-title">Your Chatbots</h1>
 
       <div className="card">
         <h2 className="section-title">Your Chatbots</h2>
 
-        {loading ? (
-          <p className="loading-text">Loading chatbots...</p>
-        ) : chatbots.length === 0 ? (
-          <p className="empty-text">No chatbots found for your company.</p>
-        ) : (
-          <ul className="chatbot-list">
-            {chatbots.map((bot: any) => (
-              <li key={bot.id} className="chatbot-item">
+        <ul className="chatbot-list">
+          {Array.isArray(chatbots) &&
+            chatbots.map((bot: Chatbot) => (
+              <li
+                key={bot.id}
+                className="chatbot-item"
+                onClick={() => router.push(`/chat/${bot.id}`)}
+                style={{ cursor: "pointer" }} // Optional: make it obvious clickable
+              >
                 <strong>{bot.name}</strong>
                 <p className="chatbot-description">{bot.description}</p>
               </li>
             ))}
-          </ul>
-        )}
+        </ul>
 
-        <button className="train-button" onClick={goToTrain}>
-          Go to Training Page
-        </button>
+        {chatbots.length < 3 && (
+          <button className="train-button" onClick={goToTrain}>
+            + Create ChatBot
+          </button>
+        )}
       </div>
     </div>
   );

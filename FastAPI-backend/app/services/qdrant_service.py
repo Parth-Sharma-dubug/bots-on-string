@@ -84,22 +84,22 @@ def get_qdrant_client():
 # shubhansh code:
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 from app.services.qdrant_service import qdrant, EMBED_MODEL, COLLECTION_NAME
-
 def retrieve_chunks(query: str, chatbot_id: int, top_k: int = 3):
-    """Search Qdrant for relevant context chunks."""
+
+    first = qdrant.scroll(collection_name=COLLECTION_NAME, limit=1)
+    print(first)
+
     query_vec = EMBED_MODEL.encode([query])[0].tolist()
 
-    # Filter: only return chunks belonging to this chatbot
     query_filter = Filter(
         must=[
             FieldCondition(
-                key="chatId",
-                match=MatchValue(value=str(chatbot_id))
+                key="chatbotId",        # FIXED: correct payload key
+                match=MatchValue(value=int(chatbot_id))   # FIXED: must be integer
             )
         ]
     )
 
-    # Perform similarity search
     results = qdrant.search(
         collection_name=COLLECTION_NAME,
         query_vector=query_vec,
@@ -107,7 +107,10 @@ def retrieve_chunks(query: str, chatbot_id: int, top_k: int = 3):
         query_filter=query_filter
     )
 
-    # Extract chunk texts
-    chunks = [result.payload["text"] for result in results]
+    chunks = [hit.payload.get("text", "") for hit in results]
+
+    print("🔍 Retrieved chunks:", len(chunks))
+    for i, c in enumerate(chunks):
+        print(f"\n--- CHUNK {i+1} ---\n{c[:400]}\n----------------\n")
 
     return chunks

@@ -8,6 +8,17 @@ from app.services.qdrant_service import retrieve_chunks
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
 LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "llama3.2")  # change to the model you pulled via `ollama pull`
 
+# 🔥 Toxicity / Offensive Word Filter
+OFFENSIVE_WORDS = {
+    "madarchod", "mc", "bc", "bhenchod", "lawda", "lawde", "lawdeya", "chutiya",
+    "chutiye", "lund", "gaand", "gandu", "fuck", "fucker", "fucking", "bitch",
+    "asshole", "dumbass", "nigger", "slut", "whore"
+}
+
+def is_offensive(text: str) -> bool:
+    lowered = text.lower()
+    return any(word in lowered for word in OFFENSIVE_WORDS)
+
 
 # chat history
 def build_chat_history(history: list[dict]) -> str:
@@ -25,31 +36,39 @@ def build_chat_history(history: list[dict]) -> str:
 async def generate_reply(message: str, chatbot_id: str, history: list[dict]):
 
     print("🔵 OLLAMA_URL =", OLLAMA_URL)
+    print("chatbot_id =", chatbot_id)
+    print("message =", message)
+
+    if is_offensive(message):
+        return "I am sorry, but I cannot respond to offensive language."
 
     # 1️⃣ Retrieve relevant context from Qdrant
     user_message = message
     chunks = retrieve_chunks(user_message, chatbot_id)
 
     context = (
-        "No knowledge base found for this chatbot."
+        "No relevant knowledge was found for this query."
         if not chunks else "\n\n".join(chunks)
     )
 
     chat_history = build_chat_history(history)
 
-    # 2️⃣ Build prompt
+    # 2️⃣ STRICT RAG + BASIC COMMUNICATION PROMPT
     prompt = [
         {
             "role": "system",
             "content": (
-                "You are a helpful company assistant.\n"
-                "Use the provided knowledge-base context when answering factual questions.\n"
-                "If the user's message is conversational (like 'ok', 'thanks', 'yes', 'continue', etc.), "
-                "respond naturally without requiring context.\n"
-                "If the user asks a factual question and the answer is NOT found in the knowledge context, reply:\n"
-                "'I don’t have information about that.'\n"
-                "Never invent facts.\n"
-                "Keep responses clear, concise, friendly, and conversational."
+                "You are a STRICT RAG-based assistant used by a company.\n"
+                "Follow these rules exactly:\n"
+                "\n"
+                "1️⃣ If the user's query requires factual information, you MUST answer ONLY using the knowledge-base context provided.\n"
+                "2️⃣ If the required information is NOT found in the context, respond with:\n"
+                "   'I don’t have information about that.'\n"
+                "3️⃣ NEVER invent facts, policies, numbers, or details.\n"
+                "4️⃣ Basic polite conversation IS allowed (e.g., 'hi', 'ok', 'thank you', 'yes', simple small talk).\n"
+                "5️⃣ DO NOT generate jokes, games, riddles, or creative content.\n"
+                "6️⃣ Keep all responses short, formal, and precise.\n"
+                "7️⃣ Only use the knowledge-base for factual answers. Never use outside knowledge.\n"
             )
         },
         {
@@ -57,26 +76,25 @@ async def generate_reply(message: str, chatbot_id: str, history: list[dict]):
             "content": (
                 f"Knowledge Base Context:\n{context}\n\n"
                 f"Conversation History:\n{chat_history}\n\n"
-                f"User question: {user_message}"
+                f"User Message:\n{user_message}\n\n"
+                "IMPORTANT:\n"
+                "- If the user message is casual (hi/ok/thanks/yes), just reply politely.\n"
+                "- If the user message is a factual question, you MUST use only the context.\n"
             )
         }
     ]
 
-    # 3️⃣ Call Ollama
+    # 3️⃣ Query Ollama
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             f"{OLLAMA_URL}/api/chat",
-            json={
-                "model": LLM_MODEL,
-                "messages": prompt,
-                "stream": False
-            }
+            json={"model": LLM_MODEL, "messages": prompt, "stream": False}
         )
 
     data = response.json()
     print("🔥 OLLAMA RAW RESPONSE:", data)
 
-    # 4️⃣ Handle different Ollama response formats safely
+    # 4️⃣ Extract reply safely
     if "message" in data:
         return data["message"]["content"]
 

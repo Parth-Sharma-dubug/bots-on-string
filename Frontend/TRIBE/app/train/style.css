@@ -1,95 +1,167 @@
-/* PAGE CONTAINER */
+/* --- Train Page Layout --- */
 .train-page-container {
-  /* min-height: 100vh; */
-  /* background: #f1f5f9; */
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   padding: 40px 20px;
+  background: linear-gradient(to bottom right, #eef2f7, #f8fafc);
+  font-family: var(--font-geist-sans), Arial, sans-serif;
 }
 
-/* CARD */
 .train-card {
-  background: white;
-  padding: 32px;
-  width: 100%;
-  max-width: 480px;
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  width: 750px;
+  background: #ffffff;
+  padding: 40px 32px;
+  border-radius: 18px;
+  box-shadow: 0px 6px 26px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.6s ease-out;
 }
 
-/* TITLE */
 .train-title {
   text-align: center;
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 800;
-  margin-bottom: 24px;
+  margin-bottom: 25px;
+  color: #1e293b;
 }
 
-/* FORM SPACING */
-.train-form > div {
-  margin-bottom: 22px;
+/* --- Upload Guidelines Block --- */
+.upload-guidelines {
+  background: #f1f5f9;
+  padding: 20px 24px;
+  border-radius: 14px;
+  margin-bottom: 30px;
+  border-left: 5px solid #2563eb;
 }
 
-/* LABEL */
-.train-form label {
-  display: block;
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 6px;
-  color: #374151;
+.upload-guidelines h3 {
+  margin-bottom: 12px;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 20px;
 }
 
-/* INPUT */
-.train-form input[type="text"],
-.train-form input[type="file"] {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+.upload-guidelines ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #475569;
+}
+
+.upload-guidelines li {
+  margin-bottom: 8px;
   font-size: 15px;
-  transition: border 0.2s, box-shadow 0.2s;
+  line-height: 1.5;
 }
 
-.train-form input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+/* --- Form Inputs --- */
+.train-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;     /* prevents elements from touching */
+}
+
+.form-group label {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #334155;
+}
+
+.form-group input[type="text"],
+.form-group input[type="file"] {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 15px;
+  transition: border 0.2s ease;
+}
+
+.form-group input:focus {
   outline: none;
+  border-color: #2563eb;
 }
 
-/* SELECTED FILE */
 .selected-file {
   margin-top: 6px;
   font-size: 14px;
-  color: #4b5563;
+  color: #475569;
 }
 
-/* SUBMIT BUTTON */
+/* --- Submit Button --- */
 .train-submit {
-  width: 100%;
-  padding: 14px;
-  background: #2563eb;
+  margin-top: 10px;
+  padding: 14px 22px;
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
   color: white;
-  font-weight: 600;
-  border-radius: 8px;
   border: none;
-  cursor: pointer;
+  border-radius: 12px;
   font-size: 16px;
-  transition: background 0.25s ease;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
 .train-submit:hover {
-  background: #1e40af;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
-.train-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* STATUS MESSAGE */
+/* --- Progress Message --- */
 .train-message {
-  margin-top: 20px;
+  margin-top: 15px;
   text-align: center;
+  color: #475569;
   font-size: 15px;
-  color: #374151;
+  font-weight: 500;
+}
+
+
+/* --- Drag & Drop Zone --- */
+/* --- Drag & Drop Zone --- */
+.drop-zone {
+  width: 100%;
+  max-width: 100%;                 /* Prevent overflow */
+  padding: 20px;
+  border: 2px dashed #94a3b8;
+  border-radius: 12px;
+  background: #f8fafc;
+  text-align: center;
+  color: #475569;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+  box-sizing: border-box;          /* FIX: include border + padding inside width */
+  display: flex;                   
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;                /* Clean uniform look */
+}
+
+/* Hover / drag styling */
+.drop-zone.drag-over {
+  border-color: #2563eb;
+  background: #e0f2fe;
+  color: #1e3a8a;
+}
+
+.drop-zone strong,
+.drop-zone span {
+  word-break: break-word;          /* Prevent long filenames from overflowing */
+  max-width: 100%;
+  display: block;
+}
+
+
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

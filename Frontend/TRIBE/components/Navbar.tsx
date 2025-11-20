@@ -13,7 +13,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Train Chatbot", path: "/train" },
-    { name: "Chat", path: "/chat" },
+    { name: "Chat", path: "/chatbot" },
   ];
 
   return (
